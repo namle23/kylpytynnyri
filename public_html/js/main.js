@@ -1,4 +1,6 @@
-var sceneKylpy, sceneBG, camera, cameraBG;
+var sceneKylpy, sceneBG, camera, cameraBG, webGLRenderer;
+var filter = /^(?:image\/bmp|image\/cis\-cod|image\/gif|image\/ief|image\/jpeg|image\/jpeg|image\/jpeg|image\/pipeg|image\/png|image\/svg\+xml|image\/tiff|image\/x\-cmu\-raster|image\/x\-cmx|image\/x\-icon|image\/x\-portable\-anymap|image\/x\-portable\-bitmap|image\/x\-portable\-graymap|image\/x\-portable\-pixmap|image\/x\-rgb|image\/x\-xbitmap|image\/x\-xpixmap|image\/x\-xwindowdump)$/i;
+var fileReader = new FileReader();
 function init() {
 
     var stats = initStats();
@@ -89,16 +91,45 @@ function init() {
     spotLight.intensity = 1;
     sceneKylpy.add(spotLight);
 
-    var background = new THREE.MeshBasicMaterial({
-        map: THREE.ImageUtils.loadTexture("asset/bg/lake.jpg"),
-        depthTest: false
-    });
+    fileReader.onload = function (oFREvent) {
+        localStorage.setItem('b', oFREvent.target.result);
+        try {
+            switchBackground();
+        } catch (e) {
+            console.log(e);
+        }
+        location.reload();
+    };
 
-    var bgPlane = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), background);
-    bgPlane.position.z = -100;
-    bgPlane.scale.set(window.innerWidth * 2, window.innerHeight * 2, 1);
-    sceneBG.add(bgPlane);
+    //assign local storage chosen file
+    var backgroundImagePath = localStorage.getItem('b');
 
+    //set custom background
+    function switchBackground() {
+        var background = new THREE.MeshBasicMaterial({
+            map: THREE.ImageUtils.loadTexture(backgroundImagePath),
+            depthTest: false
+        });
+
+        var bgPlane = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), background);
+        bgPlane.position.z = -100;
+        bgPlane.scale.set(window.innerWidth * 2, window.innerHeight * 2, 1);
+        sceneBG.add(bgPlane);
+    }
+
+    if (backgroundImagePath == null) {
+        var background = new THREE.MeshBasicMaterial({
+            map: THREE.ImageUtils.loadTexture("asset/bg/lake.jpg"),
+            depthTest: false
+        });
+
+        var bgPlane = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), background);
+        bgPlane.position.z = -100;
+        bgPlane.scale.set(window.innerWidth * 2, window.innerHeight * 2, 1);
+        sceneBG.add(bgPlane);
+    } else {
+        $(switchBackground);
+    }
     // append renderer output to HTML
     document.getElementById("WebGL").appendChild(webGLRenderer.domElement);
 
@@ -136,7 +167,7 @@ function init() {
         this.rotate = true;
         this.capColor = "blue";
         this.custom1 = "Change color of inner";
-        this.custom2 = "Change background";
+        this.custom2 = "Coming soon...";
 
         this.addCap = function () {
             sceneKylpy.add(cap);
@@ -183,7 +214,6 @@ function init() {
     customizeFolder.add(controls, "blue");
 
     customizeFolder.add(controls, "custom2");
-
 
     render();
 
@@ -237,5 +267,23 @@ function onResize() {
     cameraBG.updateProjectionMatrix();
     webGLRenderer.setSize(window.innerWidth, window.innerHeight);
 }
+
+function loadImageFile(testEl) {
+    if (!testEl.files.length) {
+        return;
+    }
+    var oFile = testEl.files[0];
+    if (!filter.test(oFile.type)) {
+        alert("File format invalid!");
+        return;
+    }
+    fileReader.readAsDataURL(oFile);
+}
+
+function removeImageFile() {
+    localStorage.removeItem("b");
+    location.reload();
+}
+
 window.onload = init;
 window.addEventListener('resize', onResize, false);

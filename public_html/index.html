@@ -8,17 +8,18 @@
 
     <body>
         <div id="Stats"> </div>
-        <div id="WebGL"> </div>
-        <div>
-            <input id="test" type="file" onchange="loadImageFile(this)">
-            <button type="button" onclick="removeImageFile()">Clear background</button>
+        <div id="WebGL"> 
+            <div id="InputButton">
+                <h4>Custom background image</h4>
+                <input id="test" type="file" onchange="loadImageFile(this)" />
+                <button type="button" onclick="removeImageFile()">Default background</button>
+            </div>
         </div>
     </body>
 
 </html>
 <script type="text/javascript" src="js/main.js"></script>
 <script type="text/javascript" src="js/three.js"></script>
-
 <script type="text/javascript" src="js/stats.js"></script>
 <script type="text/javascript" src="js/dat.gui.js"></script>
 <script type="text/javascript" src="js/OrbitControls.js"></script>

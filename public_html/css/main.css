@@ -1,4 +1,17 @@
 body {
-	margin: 0;
-	overflow: hidden;
+    margin: 0;
+    overflow: hidden;
+}
+
+#WebGL{
+    width: 100%;
+}
+
+#InputButton{
+    color: white;
+    position: absolute;
+    z-index: 1;
+    text-align: center;
+    bottom: 50px;
+    width: 100%;
 }
