@@ -1,6 +1,7 @@
 var sceneKylpy, sceneBG, camera, cameraBG, webGLRenderer;
 var filter = /^(?:image\/bmp|image\/cis\-cod|image\/gif|image\/ief|image\/jpeg|image\/jpeg|image\/jpeg|image\/pipeg|image\/png|image\/svg\+xml|image\/tiff|image\/x\-cmu\-raster|image\/x\-cmx|image\/x\-icon|image\/x\-portable\-anymap|image\/x\-portable\-bitmap|image\/x\-portable\-graymap|image\/x\-portable\-pixmap|image\/x\-rgb|image\/x\-xbitmap|image\/x\-xpixmap|image\/x\-xwindowdump)$/i;
 var fileReader = new FileReader();
+var inner;
 function init() {
 
     var stats = initStats();
@@ -18,7 +19,7 @@ function init() {
     webGLRenderer.setSize(window.innerWidth, window.innerHeight);
     webGLRenderer.shadowMap.enabled = true;
 
-    var coal, cap, inner, outter, pipe, ring, smoke;
+    var coal, cap, outter, pipe, ring, smoke;
     var loader = new THREE.JSONLoader();
 
     loader.load('asset/coal.js', function (geometry, mat) {
@@ -91,8 +92,8 @@ function init() {
     spotLight.intensity = 1;
     sceneKylpy.add(spotLight);
 
-    fileReader.onload = function (oFREvent) {
-        localStorage.setItem('b', oFREvent.target.result);
+    fileReader.onload = function (event) {
+        localStorage.setItem("b", event.target.result);
         try {
             switchBackground();
         } catch (e) {
@@ -101,11 +102,12 @@ function init() {
         location.reload();
     };
 
-    //assign local storage chosen file
-    var backgroundImagePath = localStorage.getItem('b');
+    //declare local storage chosen file
+    var backgroundImagePath = localStorage.getItem("b");
 
     //set custom background
-    function switchBackground() {
+    function switchBackground()
+    {
         var background = new THREE.MeshBasicMaterial({
             map: THREE.ImageUtils.loadTexture(backgroundImagePath),
             depthTest: false
@@ -117,7 +119,8 @@ function init() {
         sceneBG.add(bgPlane);
     }
 
-    if (backgroundImagePath == null) {
+    if (backgroundImagePath === null)
+    {
         var background = new THREE.MeshBasicMaterial({
             map: THREE.ImageUtils.loadTexture("asset/bg/lake.jpg"),
             depthTest: false
@@ -132,6 +135,8 @@ function init() {
     }
     // append renderer output to HTML
     document.getElementById("WebGL").appendChild(webGLRenderer.domElement);
+    //add event mouse click to select object
+    document.addEventListener('mousedown', onDocumentMouseDown, false);
 
     //add two scenes together
     var bgPass = new THREE.RenderPass(sceneBG, cameraBG);
@@ -153,11 +158,9 @@ function init() {
     var blackMaterial = new THREE.MeshPhongMaterial({
         color: 0x323232
     });
-
     var grayMaterial = new THREE.MeshPhongMaterial({
         color: 0xcccccc
     });
-
     var blueMaterial = new THREE.MeshPhongMaterial({
         color: 0x008B8B
     });
@@ -176,31 +179,78 @@ function init() {
         this.removeCap = function () {
             sceneKylpy.remove(cap);
         };
-
-        this.black = function () {
-            inner.traverse(function (child) {
-                if (child instanceof THREE.Mesh) {
-                    child.material = blackMaterial;
-                }
-            });
-        };
-
-        this.gray = function () {
-            inner.traverse(function (child) {
-                if (child instanceof THREE.Mesh) {
-                    child.material = grayMaterial;
-                }
-            });
-        };
-
-        this.blue = function () {
-            inner.traverse(function (child) {
-                if (child instanceof THREE.Mesh) {
-                    child.material = blueMaterial;
-                }
-            });
-        };
     };
+
+    //function select object
+    function onDocumentMouseDown(event) {
+
+        var vector = new THREE.Vector3((event.clientX / window.innerWidth) * 2 - 1, -(event.clientY / window.innerHeight) * 2 + 1, 0.5);
+        vector = vector.unproject(camera);
+
+        var raycaster = new THREE.Raycaster(camera.position, vector.sub(camera.position).normalize());
+
+        var intersects = raycaster.intersectObjects([inner]);
+
+        if (intersects.length > 0) {
+
+            console.log(intersects[0]);
+
+            //create popup
+            function popUp() {
+                var popup = document.createElement("div");
+                popup.className = "popup";
+                popup.id = "test";
+
+                var cancel = document.createElement("div");
+                cancel.className = "cancel";
+                cancel.innerHTML = "X";
+                cancel.onclick = function (event) {
+                    popup.parentNode.removeChild(popup)
+                };
+
+                var innerBlue = document.createElement("input");
+                innerBlue.type = "button";
+                innerBlue.id = "innerBlueCSS";
+                innerBlue.onclick = function () {
+                    inner.traverse(function (child) {
+                        if (child instanceof THREE.Mesh) {
+                            child.material = blueMaterial;
+                        }
+                    });
+                }
+
+                var innerBlack = document.createElement("input");
+                innerBlack.type = "button";
+                innerBlack.id = "innerBlackCSS";
+                innerBlack.onclick = function () {
+                    inner.traverse(function (child) {
+                        if (child instanceof THREE.Mesh) {
+                            child.material = blackMaterial;
+                        }
+                    });
+                }
+
+                var innerGray = document.createElement("input");
+                innerGray.type = "button";
+                innerGray.id = "innerGrayCSS";
+                innerGray.onclick = function () {
+                    inner.traverse(function (child) {
+                        if (child instanceof THREE.Mesh) {
+                            child.material = grayMaterial;
+                        }
+                    });
+                }
+
+                popup.appendChild(innerBlue);
+                popup.appendChild(innerBlack);
+                popup.appendChild(innerGray);
+
+                popup.appendChild(cancel);
+                document.body.appendChild(popup);
+            }
+            $(popUp);
+        }
+    }
 
     var gui = new dat.GUI();
     gui.add(controls, "rotate");
@@ -209,11 +259,6 @@ function init() {
     //add folder
     var customizeFolder = gui.addFolder("Customize");
     customizeFolder.add(controls, "custom1");
-    customizeFolder.add(controls, "black");
-    customizeFolder.add(controls, "gray");
-    customizeFolder.add(controls, "blue");
-
-    customizeFolder.add(controls, "custom2");
 
     render();
 
@@ -235,6 +280,7 @@ function init() {
                     smoke.rotation.y += 0.001;
                     inner.rotation.y += 0.001;
                 } catch (e) {
+                    console.log("Rotation error");
                 }
             }
         }
@@ -268,11 +314,11 @@ function onResize() {
     webGLRenderer.setSize(window.innerWidth, window.innerHeight);
 }
 
-function loadImageFile(testEl) {
-    if (!testEl.files.length) {
+function loadImageFile(chosenFile) {
+    if (!chosenFile.files.length) {
         return;
     }
-    var oFile = testEl.files[0];
+    var oFile = chosenFile.files[0];
     if (!filter.test(oFile.type)) {
         alert("File format invalid!");
         return;
