@@ -5,23 +5,18 @@ var inner;
 function init() {
 
     var stats = initStats();
-
     sceneKylpy = new THREE.Scene();
     sceneBG = new THREE.Scene();
-
     camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
     cameraBG = new THREE.OrthographicCamera(-window.innerWidth, window.innerWidth, window.innerHeight, -window.innerHeight, -10000, 10000);
     cameraBG.position.z = 50;
-
     // create render
     webGLRenderer = new THREE.WebGLRenderer();
     webGLRenderer.setClearColor(new THREE.Color(0x000, 1.0));
     webGLRenderer.setSize(window.innerWidth, window.innerHeight);
     webGLRenderer.shadowMap.enabled = true;
-
     var coal, cap, outter, pipe, ring, smoke;
     var loader = new THREE.JSONLoader();
-
     loader.load('asset/coal.js', function (geometry, mat) {
         coal = new THREE.Mesh(geometry, mat[0]);
         coal.scale.x = 10;
@@ -70,22 +65,16 @@ function init() {
         smoke.scale.z = 10;
         sceneKylpy.add(smoke);
     });
-
     // position the camera 
     camera.position.x = 50;
     camera.position.y = 80;
     camera.position.z = 40;
-
     var orbitControls = new THREE.OrbitControls(camera);
-    orbitControls.autoRotate = false;
-
     //for rotation
     var clock = new THREE.Clock();
     var delta = clock.getDelta();
-
     var ambientLight = new THREE.AmbientLight(0x383838);
     sceneKylpy.add(ambientLight);
-
     // add spotlight
     var spotLight = new THREE.SpotLight(0xffffff);
     spotLight.position.set(300, 300, 300);
@@ -93,7 +82,11 @@ function init() {
     sceneKylpy.add(spotLight);
 
     fileReader.onload = function (event) {
-        localStorage.setItem("b", event.target.result);
+        try {
+            localStorage.setItem("b", event.target.result);
+        } catch (DOMException) {
+            alert("Image size too large! Choose another image or clear localStorage.")
+        }
         try {
             switchBackground();
         } catch (e) {
@@ -101,10 +94,8 @@ function init() {
         }
         location.reload();
     };
-
     //declare local storage chosen file
     var backgroundImagePath = localStorage.getItem("b");
-
     //set custom background
     function switchBackground()
     {
@@ -112,7 +103,6 @@ function init() {
             map: THREE.ImageUtils.loadTexture(backgroundImagePath),
             depthTest: false
         });
-
         var bgPlane = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), background);
         bgPlane.position.z = -100;
         bgPlane.scale.set(window.innerWidth * 2, window.innerHeight * 2, 1);
@@ -125,7 +115,6 @@ function init() {
             map: THREE.ImageUtils.loadTexture("asset/bg/lake.jpg"),
             depthTest: false
         });
-
         var bgPlane = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), background);
         bgPlane.position.z = -100;
         bgPlane.scale.set(window.innerWidth * 2, window.innerHeight * 2, 1);
@@ -137,23 +126,18 @@ function init() {
     document.getElementById("WebGL").appendChild(webGLRenderer.domElement);
     //add event mouse click to select object
     document.addEventListener('mousedown', onDocumentMouseDown, false);
-
     //add two scenes together
     var bgPass = new THREE.RenderPass(sceneBG, cameraBG);
     var renderPass = new THREE.RenderPass(sceneKylpy, camera);
     renderPass.clear = false;
-
     var effectCopy = new THREE.ShaderPass(THREE.CopyShader);
     effectCopy.renderToScreen = true;
-
     // render 2 scenes to one image
     var composer = new THREE.EffectComposer(webGLRenderer);
     composer.renderTarget1.stencilBuffer = true;
-
     composer.addPass(bgPass);
     composer.addPass(renderPass);
     composer.addPass(effectCopy);
-
     //create material for inner
     var blackMaterial = new THREE.MeshPhongMaterial({
         color: 0x323232
@@ -164,50 +148,26 @@ function init() {
     var blueMaterial = new THREE.MeshPhongMaterial({
         color: 0x008B8B
     });
-
-    //add controls
-    var controls = new function () {
-        this.rotate = true;
-        this.capColor = "blue";
-        this.custom1 = "Change color of inner";
-        this.custom2 = "Coming soon...";
-
-        this.addCap = function () {
-            sceneKylpy.add(cap);
-        };
-
-        this.removeCap = function () {
-            sceneKylpy.remove(cap);
-        };
-    };
-
     //function select object
     function onDocumentMouseDown(event) {
 
         var vector = new THREE.Vector3((event.clientX / window.innerWidth) * 2 - 1, -(event.clientY / window.innerHeight) * 2 + 1, 0.5);
         vector = vector.unproject(camera);
-
         var raycaster = new THREE.Raycaster(camera.position, vector.sub(camera.position).normalize());
-
         var intersects = raycaster.intersectObjects([inner]);
-
         if (intersects.length > 0) {
-
-            console.log(intersects[0]);
 
             //create popup
             function popUp() {
                 var popup = document.createElement("div");
                 popup.className = "popup";
                 popup.id = "test";
-
                 var cancel = document.createElement("div");
                 cancel.className = "cancel";
                 cancel.innerHTML = "X";
                 cancel.onclick = function (event) {
                     popup.parentNode.removeChild(popup)
                 };
-
                 var innerBlue = document.createElement("input");
                 innerBlue.type = "button";
                 innerBlue.id = "innerBlueCSS";
@@ -244,7 +204,6 @@ function init() {
                 popup.appendChild(innerBlue);
                 popup.appendChild(innerBlack);
                 popup.appendChild(innerGray);
-
                 popup.appendChild(cancel);
                 document.body.appendChild(popup);
             }
@@ -252,23 +211,56 @@ function init() {
         }
     }
 
+    //add controls
+    var controls = new function () {
+        this.message = "Click inner toggle color";
+        this.rotate = true;
+        this.capColor = "blue";
+        this.custom = "Coming soon...";
+        this.addCap = function () {
+            sceneKylpy.add(cap);
+        };
+        this.removeCap = function () {
+            sceneKylpy.remove(cap);
+        };
+
+//        this.saveScene = function () {
+//            var setPositionObject = {
+//                camX: camera.position.x,
+//                camY: camera.position.y,
+//                camZ: camera.position.z
+//            }
+//            var setPositionJson = JSON.stringify(setPositionObject);
+//            localStorage.setItem("positionJson", setPositionJson);
+//            console.log(setPositionJson);
+//        };
+        this.restoreScene = function () {
+            var getPositionJson = localStorage.getItem("positionJson");
+            var getPositionObject = JSON.parse(getPositionJson);
+
+            camera.position.x = getPositionObject.camX;
+            camera.position.y = getPositionObject.camY;
+            camera.position.z = getPositionObject.camZ;
+
+            console.log(getPositionObject);
+        };
+    };
     var gui = new dat.GUI();
+    gui.add(controls, "message");
     gui.add(controls, "rotate");
     gui.add(controls, "addCap");
     gui.add(controls, "removeCap");
+//    gui.add(controls, "saveScene");
+    gui.add(controls, "restoreScene");
     //add folder
     var customizeFolder = gui.addFolder("Customize");
-    customizeFolder.add(controls, "custom1");
+    customizeFolder.add(controls, "custom");
 
     render();
-
     function render() {
         webGLRenderer.autoClear = false;
-
         stats.update();
-
         orbitControls.update(delta);
-
         if (controls.rotate) {
             if (coal) {
                 try {
@@ -299,9 +291,7 @@ function init() {
         stats.domElement.style.position = 'absolute';
         stats.domElement.style.left = '0px';
         stats.domElement.style.top = '0px';
-
         document.getElementById("Stats").appendChild(stats.domElement);
-
         return stats;
     }
 }
@@ -332,4 +322,16 @@ function removeImageFile() {
 }
 
 window.onload = init;
+
+//save camera position when user leave page
+window.onbeforeunload = function () {
+    var setPositionObject = {
+        camX: camera.position.x,
+        camY: camera.position.y,
+        camZ: camera.position.z
+    }
+    var setPositionJson = JSON.stringify(setPositionObject);
+    localStorage.setItem("positionJson", setPositionJson);
+};
+
 window.addEventListener('resize', onResize, false);

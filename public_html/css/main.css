@@ -55,21 +55,21 @@ body {
 #innerBlueCSS{
     height: 174px; 
     width: 143px;   
-    background-image:url('../asset/thumb/blue_thumb.jpg');
+    background-image:url('../asset/thumb/blue_thumb.JPG');
     background-repeat:no-repeat;
 }
 
 #innerBlackCSS{
     height: 174px; 
     width: 143px;   
-    background-image:url('../asset/thumb/black_thumb.jpg');
+    background-image:url('../asset/thumb/black_thumb.JPG');
     background-repeat:no-repeat;
 }
 
 #innerGrayCSS{
     height: 174px; 
     width: 143px;   
-    background-image:url('../asset/thumb/gray_thumb.jpg');
+    background-image:url('../asset/thumb/gray_thumb.JPG');
     background-repeat:no-repeat;
 }
 
